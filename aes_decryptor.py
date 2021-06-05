@@ -5,13 +5,19 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import pyAesCrypt
 import logging
-logging.basicConfig(filename="/home/dimaa/Downloads/watchDog.log",
+logging.basicConfig(filename="Decryptor.log",
                     level=logging.INFO, format="%(asctime)s:%(filename)s:%(lineno)d:%(message)s")
+
+desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+decryptor_path = desktop+"\\aes_decryptor"
+
+if not os.path.exists(decryptor_path):
+    os.mkdir(decryptor_path)
 
 
 class OnMyWatch:
     # Set the directory on watch
-    watchDirectory = "/home/dimaa/Downloads/testDir"
+    watchDirectory = decryptor_path
 
     def __init__(self):
         self.observer = Observer()
@@ -31,41 +37,39 @@ class OnMyWatch:
 
 
 class Handler(FileSystemEventHandler):
-
     @staticmethod
     def on_any_event(event):
         if event.is_directory:
             return None
-
         elif (event.event_type == 'created' or event.event_type == 'modified') and event.event_type != 'deleted':
             # Event is modified, you can process it now
             logging.info(f"Watchdog received modified event - {event.src_path}")
             srcPath = event.src_path
-            if srcPath.find(".aes") == -1:
-                encrptor(srcPath)
+            if srcPath.find(".aes") != -1:
+                decrptor(srcPath)
             else:
                 pass
         else:
             pass
     
     
-def encrptor(srcPath):
+def decrptor(srcPath):
     bufferSize = 64 * 1024
-    password = "3F1A18279BA64A38A215931601B946F4"
+    password = "js198989"
     try:
         infile = srcPath
-        outfile = srcPath+".aes"
+        outfile = srcPath.replace('.aes', '')
         pwd = password
         buffSize = bufferSize
-        pyAesCrypt.encryptFile(infile, outfile, pwd, buffSize)
-        os.system(f"rm -f {infile}")
-
+        pyAesCrypt.decryptFile(infile, outfile, pwd, buffSize)
+        os.remove(infile)
         return True
     except Exception as ex:
-        print(ex)
+        logging.exception(f"ERROR-MESSAGE")
         pass
 
 
 if __name__ == '__main__':
+    logging.info("Decryptor Started Working...")
     watch = OnMyWatch()
     watch.run()
